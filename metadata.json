@@ -1,0 +1,7 @@
+{
+  "name": "AuraClinical AI",
+  "description": "Professional-grade AI tool for early screening of autism traits through visual analysis and behavioral markers.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
