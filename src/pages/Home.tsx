@@ -1,3 +1,4 @@
+import { cn } from "../lib/utils";
 import React from 'react';
 import { motion } from 'motion/react';
 import { Video, FileText, Users, CheckCircle2, Eye, Smile, BarChart3 } from 'lucide-react';
