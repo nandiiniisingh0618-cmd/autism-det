@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Video, FileText, Users, CheckCircle2, Eye, Smile, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { cn } from '../lib/utils';
 
 export default function Home() {
   return (
@@ -33,7 +34,7 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link to="/results">
+              <Link to="/live">
                 <button className="medical-gradient text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 w-full sm:w-auto">
                   <Video size={24} />
                   Start Camera Analysis
@@ -43,23 +44,6 @@ export default function Home() {
                 <FileText size={24} />
                 View Clinical Whitepaper
               </button>
-            </div>
-            
-            <div className="flex items-center gap-6 pt-8 border-t border-outline-variant/20">
-              <div className="flex -space-x-3">
-                {[1, 2, 3].map((i) => (
-                  <img 
-                    key={i}
-                    className="h-10 w-10 rounded-full border-2 border-surface object-cover" 
-                    src={`https://picsum.photos/seed/doc${i}/100/100`}
-                    alt="Doctor"
-                    referrerPolicy="no-referrer"
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-on-surface-variant font-medium">
-                Trusted by <span className="text-primary font-bold">2,400+</span> healthcare providers worldwide
-              </p>
             </div>
           </motion.div>
           
