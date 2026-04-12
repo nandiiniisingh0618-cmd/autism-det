@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   CheckCircle2, 
   Eye, 
@@ -8,11 +9,85 @@ import {
   Stethoscope, 
   BookOpen, 
   ChevronRight,
-  BadgeCheck
+  BadgeCheck,
+  AlertCircle,
+  ArrowLeft
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Results() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get result from navigation state
+    if (location.state?.analysisResult) {
+      setAnalysisResult(location.state.analysisResult);
+    }
+    setLoading(false);
+  }, [location.state]);
+
+  const getRiskLevel = (prediction, confidence) => {
+    if (prediction === 'Autism') {
+      return confidence > 0.7 ? 'High Risk' : confidence > 0.5 ? 'Moderate Risk' : 'Low Risk';
+    }
+    return 'Low Risk';
+  };
+
+  const getRiskColor = (riskLevel) => {
+    switch (riskLevel) {
+      case 'High Risk': return 'text-error border-error';
+      case 'Moderate Risk': return 'text-tertiary border-tertiary';
+      case 'Low Risk': return 'text-[#2e7d32] border-[#2e7d32]';
+      default: return 'text-primary border-primary';
+    }
+  };
+
+  const getRiskBgColor = (riskLevel) => {
+    switch (riskLevel) {
+      case 'High Risk': return 'bg-error-container';
+      case 'Moderate Risk': return 'bg-tertiary-container';
+      case 'Low Risk': return 'bg-[#e8f5e9]';
+      default: return 'bg-primary-container';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-screen-xl mx-auto px-6 py-12 md:py-20">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-on-surface-variant">Loading results...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analysisResult) {
+    return (
+      <div className="max-w-screen-xl mx-auto px-6 py-12 md:py-20">
+        <div className="text-center">
+          <AlertCircle size={64} className="mx-auto text-error mb-4" />
+          <h1 className="text-3xl font-bold text-on-surface mb-4">No Results Found</h1>
+          <p className="text-on-surface-variant mb-8">Please complete an analysis first to view results.</p>
+          <button 
+            onClick={() => navigate('/live')}
+            className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:opacity-90 transition-all"
+          >
+            Start Analysis
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const riskLevel = getRiskLevel(analysisResult.prediction, analysisResult.confidence);
+  const riskColor = getRiskColor(riskLevel);
+  const riskBgColor = getRiskBgColor(riskLevel);
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 md:py-20">
       {/* Header Section */}
@@ -40,25 +115,39 @@ export default function Results() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border-l-8 border-[#2e7d32]"
+            className={`bg-surface-container-lowest p-8 rounded-2xl shadow-sm border-l-8 ${riskColor}`}
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant opacity-70">Final Clinical Outlook</span>
-                <h2 className="text-5xl font-extrabold text-[#2e7d32] mt-2">Low Risk</h2>
+                <h2 className={`text-5xl font-extrabold mt-2 ${riskColor}`}>{riskLevel}</h2>
                 <p className="text-on-surface-variant mt-4 leading-relaxed text-lg">
-                  The analysis indicates that the observed behaviors align with typical developmental patterns. No significant indicators of immediate concern were detected during this session.
+                  {analysisResult.prediction === 'Autism' 
+                    ? `The analysis indicates potential autism traits with ${analysisResult.confidence_percentage}% confidence. Further professional evaluation is recommended for comprehensive assessment.`
+                    : `The analysis indicates that the observed behaviors align with typical developmental patterns with ${analysisResult.confidence_percentage}% confidence. No significant indicators of immediate concern were detected during this session.`
+                  }
                 </p>
+                <div className="mt-4 flex items-center gap-4 text-sm text-on-surface-variant">
+                  <span><strong>Model Prediction:</strong> {analysisResult.prediction}</span>
+                  <span>•</span>
+                  <span><strong>Confidence:</strong> {analysisResult.confidence_percentage}%</span>
+                </div>
               </div>
-              <div className="flex-shrink-0 flex items-center justify-center w-28 h-28 rounded-full bg-[#e8f5e9] text-[#2e7d32] shadow-inner">
-                <CheckCircle2 size={64} strokeWidth={2.5} />
+              <div className={`flex-shrink-0 flex items-center justify-center w-28 h-28 rounded-full ${riskBgColor} ${riskColor} shadow-inner`}>
+                {riskLevel === 'Low Risk' ? (
+                  <CheckCircle2 size={64} strokeWidth={2.5} />
+                ) : riskLevel === 'Moderate Risk' ? (
+                  <AlertCircle size={64} strokeWidth={2.5} />
+                ) : (
+                  <AlertCircle size={64} strokeWidth={2.5} />
+                )}
               </div>
             </div>
           </motion.div>
 
           {/* Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Eye Contact */}
+            {/* Model Confidence */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -67,23 +156,23 @@ export default function Results() {
             >
               <div className="flex justify-between items-start mb-6">
                 <span className="p-3 rounded-xl bg-primary/10 text-primary">
-                  <Eye size={28} />
+                  <Brain size={28} />
                 </span>
-                <span className="text-3xl font-extrabold text-primary">72%</span>
+                <span className="text-3xl font-extrabold text-primary">{analysisResult.confidence_percentage}%</span>
               </div>
-              <h3 className="text-xl font-bold mb-2">Eye Contact</h3>
-              <p className="text-sm text-on-surface-variant leading-relaxed mb-6">Frequency of direct ocular engagement sustained throughout the screening session.</p>
+              <h3 className="text-xl font-bold mb-2">Model Confidence</h3>
+              <p className="text-sm text-on-surface-variant leading-relaxed mb-6">AI model confidence level in the prediction based on visual analysis.</p>
               <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: "72%" }}
+                  animate={{ width: `${analysisResult.confidence_percentage}%` }}
                   transition={{ duration: 1.5, delay: 0.5 }}
                   className="bg-primary h-full rounded-full"
                 ></motion.div>
               </div>
             </motion.div>
 
-            {/* Attention Score */}
+            {/* Analysis Threshold */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -92,16 +181,16 @@ export default function Results() {
             >
               <div className="flex justify-between items-start mb-6">
                 <span className="p-3 rounded-xl bg-tertiary/10 text-tertiary">
-                  <Brain size={28} />
+                  <BarChart3 size={28} />
                 </span>
-                <span className="text-3xl font-extrabold text-tertiary">85/100</span>
+                <span className="text-3xl font-extrabold text-tertiary">{(analysisResult.threshold_used * 100).toFixed(0)}%</span>
               </div>
-              <h3 className="text-xl font-bold mb-2">Attention Score</h3>
-              <p className="text-sm text-on-surface-variant leading-relaxed mb-6">Calculated based on sustained focus periods and response to external visual stimuli.</p>
+              <h3 className="text-xl font-bold mb-2">Decision Threshold</h3>
+              <p className="text-sm text-on-surface-variant leading-relaxed mb-6">Classification threshold used to determine autism vs non-autism prediction.</p>
               <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: "85%" }}
+                  animate={{ width: `${analysisResult.threshold_used * 100}%` }}
                   transition={{ duration: 1.5, delay: 0.6 }}
                   className="bg-tertiary h-full rounded-full"
                 ></motion.div>
@@ -140,6 +229,15 @@ export default function Results() {
 
         {/* Right Column: Sidebar */}
         <div className="md:col-span-4 space-y-8">
+          {/* Back Button */}
+          <button 
+            onClick={() => navigate('/live')}
+            className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all text-on-surface font-medium mb-6"
+          >
+            <ArrowLeft size={18} />
+            Back to Analysis
+          </button>
+
           {/* Next Steps */}
           <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-xl shadow-primary/5 border border-outline-variant/20">
             <h3 className="text-2xl font-bold mb-8">Next Steps</h3>

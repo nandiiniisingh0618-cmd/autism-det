@@ -1,11 +1,14 @@
 import { cn } from "../lib/utils";
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Video, FileText, Users, CheckCircle2, Eye, Smile, BarChart3 } from 'lucide-react';
+import { Video, FileText, Users, CheckCircle2, Eye, Smile, BarChart3, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cn } from '../lib/utils';
+import ClinicalWhitepaper from '../components/ClinicalWhitepaper';
+ 
 
 export default function Home() {
+  const [showWhitepaper, setShowWhitepaper] = useState(false);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -40,8 +43,11 @@ export default function Home() {
                   Start Camera Analysis
                 </button>
               </Link>
-              <button className="bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-xl font-bold text-lg hover:bg-surface-container-highest transition-colors flex items-center justify-center gap-3 w-full sm:w-auto">
-                <FileText size={24} />
+              <button 
+                onClick={() => setShowWhitepaper(true)}
+                className="medical-gradient text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 w-full sm:w-auto"
+              >
+                <BookOpen size={24} />
                 View Clinical Whitepaper
               </button>
             </div>
@@ -191,6 +197,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Clinical Whitepaper Modal */}
+      <ClinicalWhitepaper isOpen={showWhitepaper} onClose={() => setShowWhitepaper(false)} />
     </div>
   );
 }
