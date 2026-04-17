@@ -12,8 +12,8 @@ class FrameCaptureService {
     this.onPredictionCallback = null;
     this.onStatusCallback = null;
     this.onErrorCallback = null;
-    this.captureFrequency = 2500; // 2.5 seconds
-    this.apiBaseUrl = 'http://127.0.0.1:5000';
+    this.captureFrequency = 6000; // 6 seconds (Avoids Gemini 2.0 Flash 15 RPM limit)
+    this.apiBaseUrl = 'http://localhost:5000';
     this.isProcessing = false;
   }
 
@@ -241,7 +241,12 @@ class FrameCaptureService {
       return await response.json();
     } catch (error) {
       console.error('API request error:', error);
-      this.handleError(`Analysis failed: ${error.message}`);
+      
+      const isNetworkError = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
+      const errorPrefix = isNetworkError ? 'Network Error' : 'Analysis failed';
+      const helpSnippet = isNetworkError ? ' (Is the backend server running?)' : '';
+      
+      this.handleError(`${errorPrefix}: ${error.message}${helpSnippet}`);
       return null;
     }
   }

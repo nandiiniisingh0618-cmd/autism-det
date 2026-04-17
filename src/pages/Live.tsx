@@ -17,7 +17,7 @@ export default function Live() {
   const [currentPrediction, setCurrentPrediction] = useState(null);
   const [processingTime, setProcessingTime] = useState(null);
   const [features, setFeatures] = useState(null);
-  const [captureFrequency, setCaptureFrequency] = useState(2500);
+  const [captureFrequency, setCaptureFrequency] = useState(6000);
   const [showSettings, setShowSettings] = useState(false);
   const [showCameraHelp, setShowCameraHelp] = useState(false);
   const [cameraDiagnostics, setCameraDiagnostics] = useState(null);
@@ -281,22 +281,24 @@ export default function Live() {
             /* Webcam Mode */
             <div className="space-y-6">
               <div className="aspect-video bg-surface-container-highest rounded-3xl overflow-hidden relative shadow-2xl border border-outline-variant/20">
-                {!isStreaming ? (
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`w-full h-full object-cover ${!isStreaming ? 'hidden' : ''}`}
+                />
+                
+                {!isStreaming && (
                   <div className="absolute inset-0 flex items-center justify-center text-on-surface-variant/40 flex-col gap-4">
                     <Video size={64} strokeWidth={1} />
                     <p className="font-medium">Camera Ready</p>
                     <p className="text-sm">Click "Enable Camera Access" to begin</p>
                   </div>
-                ) : (
+                )}
+
+                {isStreaming && (
                   <>
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover"
-                    />
-                    
                     {/* Overlay UI */}
                     <div className="absolute top-6 left-6 flex gap-3">
                       <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">

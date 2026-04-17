@@ -28,7 +28,7 @@ export default function CameraTest() {
       
       setDiagnostics(support);
       
-      if (support.hasGetUserMedia) {
+      if (!support.hasGetUserMedia) {
         throw new Error('getUserMedia not supported');
       }
 

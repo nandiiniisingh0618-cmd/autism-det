@@ -5,7 +5,7 @@
 
 class VideoProcessorLite {
   constructor() {
-    this.apiBaseUrl = 'http://127.0.0.1:5000'; // Use main API for simplicity
+    this.apiBaseUrl = 'http://localhost:5000'; // Use main API for simplicity
     this.isProcessing = false;
     this.onProgressCallback = null;
     this.onCompleteCallback = null;

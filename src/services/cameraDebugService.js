@@ -37,7 +37,7 @@ class CameraDebugService {
 
     // Check secure context
     if (!diagnostics.isSecure) {
-      diagnostics.errors.push('Camera access requires HTTPS (except on localhost)');
+      console.warn('Camera access requires HTTPS (except on localhost)');
     }
 
     try {
@@ -47,14 +47,14 @@ class CameraDebugService {
       diagnostics.hasWebcam = diagnostics.availableDevices.length > 0;
 
       if (!diagnostics.hasWebcam) {
-        diagnostics.errors.push('No webcam devices found');
+        console.warn('No webcam devices found yet. This might require permissions first.');
       }
 
       console.log('Camera diagnostics:', diagnostics);
       return diagnostics;
 
     } catch (error) {
-      diagnostics.errors.push(`Device enumeration failed: ${error.message}`);
+      console.warn(`Device enumeration failed: ${error.message}`);
       return diagnostics;
     }
   }
@@ -139,16 +139,26 @@ class CameraDebugService {
         permissionDiagnostics.attempts.push(errorInfo);
         console.warn(`Camera attempt ${i + 1} failed:`, errorInfo);
 
-        // If it's a permission error, don't try further
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-          permissionDiagnostics.error = 'Camera permission denied by user';
+        // Break early for errors that won't be fixed by changing constraints
+        const constraintErrors = ['OverconstrainedError', 'ConstraintNotSatisfiedError'];
+        if (!constraintErrors.includes(error.name)) {
+          permissionDiagnostics.error = error;
           break;
         }
+        
+        // Keep track of the last error to return if all attempts fail
+        permissionDiagnostics.lastError = error;
       }
     }
 
     if (!permissionDiagnostics.successful && !permissionDiagnostics.error) {
-      permissionDiagnostics.error = 'All camera constraint attempts failed';
+      if (permissionDiagnostics.lastError) {
+        const enhancedError = new Error(`All camera constraint attempts failed. Underlying error: ${permissionDiagnostics.lastError.name} - ${permissionDiagnostics.lastError.message}`);
+        enhancedError.name = permissionDiagnostics.lastError.name;
+        permissionDiagnostics.error = enhancedError;
+      } else {
+        permissionDiagnostics.error = new Error('All camera constraint attempts failed');
+      }
     }
 
     return permissionDiagnostics;
@@ -159,55 +169,57 @@ class CameraDebugService {
    */
   async initializeCamera(videoElement) {
     try {
+      if (!videoElement) {
+        throw new Error('Video element not provided to initializeCamera');
+      }
+      
       this.videoElement = videoElement;
 
       // Step 1: Check camera support
       const diagnostics = await this.checkCameraSupport();
       
       if (diagnostics.errors.length > 0) {
-        throw new Error(`Camera check failed: ${diagnostics.errors.join(', ')}`);
+        console.warn(`Camera check warnings: ${diagnostics.errors.join(', ')}`);
       }
 
       // Step 2: Request permissions
       const permissionResult = await this.requestCameraPermission();
       
       if (!permissionResult.successful) {
-        throw new Error(permissionResult.error || 'Failed to get camera permission');
+        throw permissionResult.error;
       }
 
       // Step 3: Set up video element
       this.stream = permissionResult.stream;
       
-      if (this.videoElement) {
-        this.videoElement.srcObject = this.stream;
-        
-        // Wait for video to be ready
-        return new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error('Video element timeout - failed to load stream'));
-          }, 10000);
+      this.videoElement.srcObject = this.stream;
+      
+      // Wait for video to be ready
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Video element timeout - failed to load stream'));
+        }, 10000);
 
-          this.videoElement.onloadedmetadata = () => {
-            clearTimeout(timeout);
-            this.videoElement.play().catch(playError => {
-              console.warn('Video play() failed:', playError);
-              // Try muted play as fallback
-              this.videoElement.muted = true;
-              this.videoElement.play().then(() => {
-                console.log('Video started with muted fallback');
-                resolve(true);
-              }).catch(reject);
-            }).then(() => {
+        this.videoElement.onloadedmetadata = () => {
+          clearTimeout(timeout);
+          this.videoElement.play().catch(playError => {
+            console.warn('Video play() failed:', playError);
+            // Try muted play as fallback
+            this.videoElement.muted = true;
+            this.videoElement.play().then(() => {
+              console.log('Video started with muted fallback');
               resolve(true);
-            });
-          };
+            }).catch(reject);
+          }).then(() => {
+            resolve(true);
+          });
+        };
 
-          this.videoElement.onerror = (error) => {
-            clearTimeout(timeout);
-            reject(new Error(`Video element error: ${error}`));
-          };
-        });
-      }
+        this.videoElement.onerror = (error) => {
+          clearTimeout(timeout);
+          reject(new Error(`Video element error: ${error}`));
+        };
+      });
 
     } catch (error) {
       console.error('Camera initialization failed:', error);
