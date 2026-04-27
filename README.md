@@ -1,20 +1,15 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+AutismSense-CV: Behavioral Tracking & Emotion Recognition
+Project Overview
+AutismSense-CV is a technical framework designed to assist in the identification of behavioral markers associated with Autism Spectrum Disorder (ASD). Moving beyond simple questionnaires, this project leverages Real-time Computer Vision to analyze facial expressions, eye contact, and repetitive motor patterns.
 
-# Run and deploy your AI Studio app
+The system is built to provide objective data for clinicians and parents, facilitating earlier intervention through non-invasive video analysis.
 
-This contains everything you need to run your app locally.
+Key Features
+Real-time Emotion Recognition: Analyzes facial micro-expressions to gauge emotional response.
 
-View your app in AI Studio: https://ai.studio/apps/6e98fd24-f5c8-46a6-8218-5e139c062530
+Behavioral Tracking: Uses YOLOv8-based detection to monitor specific physical markers or social engagement cues.
 
-## Run Locally
+Webcam Integration: Optimized for live analysis via local camera feeds, replacing high-latency API calls.
 
-**Prerequisites:**  Node.js
+Data-Driven Insights: Generates visual reports on engagement levels and emotional variance over time.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
